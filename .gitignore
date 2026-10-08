@@ -1,0 +1,7 @@
+venv/
+vad/
+registros/
+dist/
+build/
+bin/
+modelos/

@@ -1,0 +1,140 @@
+NextFrames — instrucciones de instalación (carpeta independiente)
+===================================================================
+
+VERSIÓN DE ESTE PAQUETE: 2026-09-29.3
+(Ese mismo texto aparece en el título de la ventana cuando abras el programa,
+y en el archivo VERSION.txt de esta carpeta. Sirve para confirmar, de un
+vistazo, que el .exe que estás viendo se compiló con ESTOS archivos y no con
+una versión vieja. Cada vez que te mande un cambio, el número va a subir.)
+
+REGLA DE ORO, PARA NO VOLVER A MEZCLAR ARCHIVOS VIEJOS Y NUEVOS
+  De aquí en adelante, cada vez que te pase una actualización:
+    1. BORRA la carpeta del proyecto completa.
+    2. Descomprime el zip nuevo, de cero, en un lugar limpio.
+    3. Nunca copies un archivo suelto (app.py, motor_x.py, etc.) por encima
+       de una carpeta que ya tenías. Si haces eso, no hay forma de estar
+       100% seguro de que Windows no dejó una mezcla.
+  Es más lento que "pegar un solo archivo", pero es la única forma de que
+  nunca tengas que adivinar cuál versión estás compilando.
+
+QUÉ ES ESTO
+  Una carpeta completa y aislada. NextFrames NO necesita nada de tu carpeta
+  C:\Kamiguiri para funcionar: ni el venv viejo, ni los scripts originales,
+  ni el build anterior. Las únicas tres cosas externas que tienes que traer
+  son ffmpeg.exe, ffprobe.exe y TwitchDownloaderCLI.exe (programas que ya
+  tenías descargados en C:\entrega\bin); todo lo demás vive aquí dentro.
+
+PASO 0. Elige una ubicación NUEVA, fuera de Kamiguiri
+  Por ejemplo, directo en la raíz del disco:
+      C:\NextFrames
+  (Puede ser cualquier carpeta que NO esté dentro de C:\Kamiguiri. Lo
+  importante es que sea un lugar donde no haya versiones viejas rondando.)
+
+PASO 1. Descomprime el zip ahí
+  Botón derecho sobre NextFrames_proyecto.zip → Extraer todo... → elige
+  C:\NextFrames como destino. Al terminar debes tener, por ejemplo:
+      C:\NextFrames\app.py
+      C:\NextFrames\motor_descarga.py
+      C:\NextFrames\motor_extraer.py
+      C:\NextFrames\nf_comun.py, nf_modelos.py, nf_cuda.py
+      C:\NextFrames\NextFrames.spec
+      C:\NextFrames\compilar.bat
+      C:\NextFrames\requirements.txt
+      C:\NextFrames\VERSION.txt
+      C:\NextFrames\vad\silero_vad_v6.onnx
+      C:\NextFrames\bin\   (vacía, la llenas en el paso 2)
+  Confirma con este comando que quedó donde debía:
+      type C:\NextFrames\VERSION.txt
+  Debe imprimir: 2026-09-29.1
+
+PASO 2. Copia los tres programas externos a bin\
+    copy C:\entrega\bin\ffmpeg.exe C:\NextFrames\bin\
+    copy C:\entrega\bin\ffprobe.exe C:\NextFrames\bin\
+    copy C:\entrega\bin\TwitchDownloaderCLI.exe C:\NextFrames\bin\
+  (Si los tienes en otra ruta, ajusta el origen. Esta es la única vez que
+  este proyecto toca algo fuera de sí mismo.)
+
+PASO 3. Crea un venv NUEVO, propio de esta carpeta (no el de Kamiguiri)
+    cd C:\NextFrames
+    python -m venv venv
+    venv\Scripts\activate
+  Debe aparecer (venv) al inicio de la línea, y si te fijas en la ruta que
+  muestra "where python" después de activar, tiene que apuntar dentro de
+  C:\NextFrames\venv, no de C:\Kamiguiri\venv.
+    where python
+
+PASO 4. Instala las dependencias
+    pip install -r requirements.txt
+  Esto va a tardar varios minutos porque el venv es nuevo y tiene que bajar
+  todo (faster-whisper, ctranslate2, customtkinter, etc.), a diferencia de
+  tu venv viejo que ya tenía casi todo instalado. Es normal, es una sola vez.
+
+PASO 5. Compila
+    compilar.bat
+  Hace lo mismo de siempre: revisa que bin\ tenga los 3 programas, corre
+  PyInstaller con NextFrames.spec, y arma dist\NextFrames\ con todo adentro
+  (incluyendo bin\, modelos\ y registros\).
+
+PASO 6. Abre y confirma la versión
+    dist\NextFrames\NextFrames.exe
+  Mira el título de la ventana: debe decir "NextFrames — 2026-09-29.1". Si
+  dice otra cosa (o nada), algo se coló mal en el paso 1 y hay que repetirlo.
+
+PASO 7. La comparación final (igual que siempre)
+  Con el mismo directo corto de tu prueba original: procésalo en NextFrames,
+  extrae su dataset, y compara el CSV nuevo contra el que ya tenías.
+
+DE AQUÍ EN ADELANTE
+  Cuando te pase un cambio, vas a recibir el mismo NextFrames_proyecto.zip
+  con un VERSION.txt más nuevo. Repite: borra C:\NextFrames completa,
+  descomprime de cero, copia otra vez los 3 binarios a bin\ (esos sí puedes
+  reciclarlos, no cambian), y activa el MISMO venv que ya creaste en el
+  paso 3 (no hace falta crearlo de nuevo cada vez, solo si borras esa
+  carpeta también). Con eso te ahorras el paso 4 la mayoría de las veces,
+  salvo que te avise que agregué alguna dependencia nueva.
+
+QUÉ CAMBIÉ RESPECTO A TUS SCRIPTS ORIGINALES (resumen)
+  - bin\ (ffmpeg, ffprobe, TwitchDownloaderCLI) ya NO se copia con un paso
+    aparte después de compilar. Ahora NextFrames.spec lo empaqueta él mismo
+    como parte de la compilación (igual que ya hacía con el VAD), tomándolo
+    siempre de bin\ en la raíz del proyecto. Esa es la ÚNICA carpeta bin\
+    que debes mantener: nunca crees ni edites una dentro de dist\, porque
+    esa se borra y se reconstruye entera cada vez que compilas (es normal
+    de PyInstaller). compilar.bat, al final, confirma si quedó bien copiada.
+  - El fondo ya no es negro puro (#000000): ahora es azul marino, así que no
+    quedan esos márgenes negros a los lados del contenido.
+  - Rutas fijas (C:\ffmpeg-..., C:\Kamiguiri\...) reemplazadas por bin\,
+    modelos\ y Contenido_Extraido\ relativas a la carpeta del programa.
+  - El idioma es obligatorio y se pasa a Whisper (antes lo adivinaba solo).
+  - distil-large-v3 solo aparece como opción/candidato si el idioma es inglés.
+  - El benchmark ya no cuenta el tiempo de descarga del modelo, y si un
+    modelo falla durante el benchmark, el error queda visible en vez de
+    perderse en silencio.
+  - print() y tqdm ahora van al panel de la ventana, no a una consola.
+  - Todos los subprocess (ffmpeg, aria2c, TwitchDownloaderCLI) se abren sin
+    consola (CREATE_NO_WINDOW): no más ventanitas negras.
+  - extraer_dataset.py ya no usa sys.exit ni argparse: procesar_lote() es la
+    función que llama la ventana.
+  - La GPU se detecta y se prueba; si falla (NVIDIA sin librerías CUDA), el
+    programa cae a CPU automáticamente y lo avisa.
+  - Las librerías CUDA (~1 GB) NO viajan con el programa: solo se descargan
+    si eliges GPU en la ventana.
+  - Los modelos de Whisper se descargan con barra de progreso a la carpeta
+    que elijas, integrado en la misma pantalla de Descarga y transcripción.
+  - Sin panel de registro aparte: los errores se muestran en la fila o barra
+    donde ocurren (igual quedan guardados en registros\AAAA-MM-DD.log).
+
+ARCHIVOS DE ESTA ENTREGA
+  app.py              ventana (CustomTkinter, negro y azul)
+  motor_descarga.py   tu cortador_maestro_5.py, envuelto para la ventana
+  motor_extraer.py    tu extraer_dataset.py, envuelto para la ventana
+  nf_comun.py         rutas, config.json, registro, puente motor->ventana
+  nf_modelos.py       gestor de modelos de Whisper
+  nf_cuda.py          descarga opcional de CUDA
+  NextFrames.spec     receta de PyInstaller (carpeta portable)
+  compilar.bat        compila y arma dist\NextFrames\
+  requirements.txt    dependencias del venv propio de este proyecto
+  VERSION.txt         número de versión de este paquete
+  vad\                silero_vad_v6.onnx de respaldo
+  bin\                pon aquí ffmpeg.exe, ffprobe.exe, TwitchDownloaderCLI.exe
+  modelos\, registros\  se llenan solos al usar el programa
